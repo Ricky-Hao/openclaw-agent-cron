@@ -1,0 +1,80 @@
+{
+  "id": "agent-cron",
+  "name": "Agent Cron",
+  "version": "0.2.0",
+  "description": "Agent-isolated cron wrapper. Provides agent_cron_* tools with per-agent ACL, quotas, and audit logging over OpenClaw's built-in cron.",
+  "main": "dist/index.js",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "storePath": {
+        "type": "string",
+        "description": "Directory for SQLite database files. Defaults to <stateDir>/agent-cron"
+      },
+      "defaultTz": {
+        "type": "string",
+        "default": "UTC",
+        "description": "Default timezone for cron expressions without explicit tz"
+      },
+      "adminAgentIds": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": ["main"],
+        "description": "Agent IDs with cross-agent management privileges"
+      },
+      "maxJobsPerAgent": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 100,
+        "description": "Maximum number of active jobs per agent"
+      },
+      "minIntervalSeconds": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 60,
+        "description": "Minimum allowed interval between runs in seconds"
+      },
+      "maxTimeoutSeconds": {
+        "type": "integer",
+        "minimum": 1,
+        "default": 600,
+        "description": "Maximum allowed timeout per run in seconds"
+      },
+      "gateway": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "openclawBin": {
+            "type": "string",
+            "default": "openclaw",
+            "description": "Path to the openclaw binary (resolved via PATH by default)"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "default": 15000,
+            "description": "Gateway call timeout in milliseconds"
+          }
+        }
+      },
+      "audit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable audit logging"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 90,
+            "description": "Audit log retention in days"
+          }
+        }
+      }
+    }
+  }
+}

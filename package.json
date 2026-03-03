@@ -1,0 +1,40 @@
+{
+  "name": "agent-cron",
+  "version": "0.2.0",
+  "description": "Agent-isolated cron wrapper for OpenClaw. Provides agent_cron_* tools with per-agent ACL, quota enforcement, and audit logging over the built-in cron.",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "postbuild": "mkdir -p dist/store && cp src/store/schema.sql dist/store/schema.sql",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test:unit": "node --import tsx --test tests/unit/**/*.test.ts",
+    "test:integration": "node --import tsx --test tests/integration/**/*.test.ts"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.41",
+    "better-sqlite3": "^12.6.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ],
+  "license": "MIT"
+}
