@@ -5,6 +5,7 @@ ACL wrapper around OpenClaw's built-in cron. Provides `agent_cron_*` tools with 
 ## Features
 
 - **9 tools**: `agent_cron_add`, `agent_cron_list`, `agent_cron_get`, `agent_cron_update`, `agent_cron_remove`, `agent_cron_pause`, `agent_cron_resume`, `agent_cron_run`, `agent_cron_runs`
+- **Cross-plugin API**: Exposes `addJob()` via `globalThis[Symbol.for("openclaw.agentCron.addJob")]` for other plugins to schedule jobs programmatically (no import needed)
 - **Per-agent isolation**: Non-admin agents can only manage their own jobs
 - **Admin cross-agent access**: Configured admin agents can manage all jobs
 - **3 schedule types**: `at` (one-shot), `every` (interval), `cron` (5-field with timezone)
@@ -16,7 +17,7 @@ ACL wrapper around OpenClaw's built-in cron. Provides `agent_cron_*` tools with 
 ## Installation
 
 ```bash
-cd /home/ricky/git/openclaw-agent-cron
+cd /path/to/openclaw-agent-cron
 npm install
 npm run build
 ```
@@ -30,7 +31,7 @@ Add to your `openclaw.json` plugin entries:
   "plugins": {
     "entries": {
       "agent-cron": {
-        "source": "/home/ricky/git/openclaw-agent-cron",
+        "source": "/path/to/openclaw-agent-cron",
         "config": {
           "storePath": "/path/to/data/agent-cron",
           "defaultTz": "Asia/Shanghai",
@@ -107,7 +108,6 @@ Create a new scheduled job.
 
 **Payload kinds:**
 - `agentTurn`: `{ "kind": "agentTurn", "message": "Do something" }`
-- `systemEvent`: Not supported in this plugin version.
 
 **Delivery (required for `agentTurn`):**
 
@@ -149,6 +149,36 @@ Manually trigger an immediate execution of a job.
 
 Query execution history for a job by `jobId`.
 
+## Cross-Plugin API
+
+Other OpenClaw plugins can schedule jobs programmatically without importing this package. After the plugin starts, `addJob` is available on `globalThis`:
+
+```typescript
+const ADD_JOB = Symbol.for("openclaw.agentCron.addJob");
+
+type AddJobFn = (params: {
+  name: string;
+  ownerAgentId: string;
+  schedule: { kind: "at"; at: string };
+  payload: { kind: "agentTurn"; message: string; timeoutSeconds?: number };
+  delivery: { mode: "announce"; channel: string; to: string };
+}) => Promise<{ ok: boolean; jobId?: string; error?: string }>;
+
+const addJob = (globalThis as Record<symbol, unknown>)[ADD_JOB] as AddJobFn | undefined;
+if (typeof addJob === "function") {
+  const result = await addJob({
+    name: "my-task",
+    ownerAgentId: "my-agent",
+    schedule: { kind: "at", at: new Date(Date.now() + 600_000).toISOString() },
+    payload: { kind: "agentTurn", message: "Do something in 10 minutes" },
+    delivery: { mode: "announce", channel: "qq", to: "qq:group:111222333" },
+  });
+  console.log(result); // { ok: true, jobId: "..." }
+}
+```
+
+This follows the same `Symbol.for` + `globalThis` pattern used by OpenClaw core for cross-module state sharing, avoiding module-instance duplication issues with `import()`.
+
 ## Permission Model
 
 | Actor | Action | Allowed? |
@@ -164,14 +194,8 @@ Admin agents are configured via `adminAgentIds` (default: `["main"]`).
 ## Running Tests
 
 ```bash
-# All tests (67 tests across 6 suites)
+# All tests (212 tests)
 npm test
-
-# Unit tests only
-npm run test:unit
-
-# Integration tests only
-npm run test:integration
 ```
 
 Tests use an in-memory SQLite database and a mock gateway client (`MockGatewayCronClient`) — no real gateway process is needed.
@@ -188,6 +212,7 @@ npm run dev          # watch mode
 ```
 src/
 ├── index.ts                Plugin entry: tool + service registration
+├── api.ts                  Programmatic API (addJob) + globalThis symbol exposure
 ├── config.ts               Config interface & defaults merging
 ├── acl.ts                  Per-agent ACL (admin bypass / owner check)
 ├── core/
