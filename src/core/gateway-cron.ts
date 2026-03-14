@@ -124,9 +124,14 @@ export class GatewayCronClient implements IGatewayCronClient {
           return;
         }
 
-        // Parse JSON stdout
+        // Parse JSON stdout — strip non-JSON prefix lines (e.g. plugin logs)
         try {
-          const parsed = JSON.parse(stdout) as T;
+          let json = stdout;
+          const jsonStart = json.indexOf("{");
+          if (jsonStart > 0) {
+            json = json.slice(jsonStart);
+          }
+          const parsed = JSON.parse(json) as T;
           resolve(parsed);
         } catch {
           reject(
