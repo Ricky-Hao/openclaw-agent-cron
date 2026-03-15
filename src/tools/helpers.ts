@@ -198,7 +198,7 @@ export function validateTimeout(payload: Payload, config: AgentCronConfig): void
 
 /**
  * Validate delivery for agentTurn payloads.
- * For agentTurn: delivery is REQUIRED, mode must be "announce",
+ * For agentTurn: delivery is REQUIRED, mode must be "announce" or "none",
  * channel and to must be non-empty strings.
  */
 export function validateDelivery(payload: Payload, delivery: Delivery | undefined): void {
@@ -208,9 +208,9 @@ export function validateDelivery(payload: Payload, delivery: Delivery | undefine
       "delivery is required for agentTurn payloads (must include mode, channel, and to)",
     );
   }
-  if (delivery.mode !== "announce") {
+  if (delivery.mode !== "announce" && delivery.mode !== "none") {
     throw validationError(
-      `delivery.mode must be "announce" for agentTurn payloads, got "${delivery.mode ?? "undefined"}"`,
+      `delivery.mode must be "announce" or "none" for agentTurn payloads, got "${delivery.mode ?? "undefined"}"`,
     );
   }
   if (!delivery.channel || delivery.channel.trim() === "") {

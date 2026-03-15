@@ -476,11 +476,11 @@ describe("CRUD Integration (wrapper)", () => {
       name: "bad-mode",
       schedule: { kind: "every", intervalSeconds: 300 },
       payload: { kind: "agentTurn", message: "test" },
-      delivery: { mode: "none" as any, channel: "ch", to: "user" },
+      delivery: { mode: "webhook" as any, channel: "ch", to: "user" },
     }, "agent-a");
     const data = parseResult(result) as { error: string; message: string };
     assert.equal(data.error, "VALIDATION_ERROR");
-    assert.match(data.message, /delivery\.mode must be "announce"/);
+    assert.match(data.message, /delivery\.mode must be "announce" or "none"/);
   });
 
   it("add rejects delivery with empty channel", async () => {

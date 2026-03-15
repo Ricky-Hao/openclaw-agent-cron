@@ -419,12 +419,18 @@ describe("validateDelivery", () => {
     });
   });
 
-  it("throws when mode is not announce for agentTurn", () => {
+  it("allows mode 'none' for agentTurn", () => {
     const p: Payload = { kind: "agentTurn", message: "x" };
     const d: Delivery = { mode: "none", channel: "ch", to: "user" };
+    assert.doesNotThrow(() => validateDelivery(p, d));
+  });
+
+  it("throws when mode is invalid for agentTurn", () => {
+    const p: Payload = { kind: "agentTurn", message: "x" };
+    const d: Delivery = { mode: "webhook" as any, channel: "ch", to: "user" };
     assert.throws(() => validateDelivery(p, d), (err: any) => {
       assert.equal(err.code, "VALIDATION_ERROR");
-      assert.match(err.message, /announce/);
+      assert.match(err.message, /announce.*none/);
       return true;
     });
   });
