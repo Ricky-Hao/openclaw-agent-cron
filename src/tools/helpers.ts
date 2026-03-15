@@ -85,11 +85,10 @@ export function innerScheduleToUserFacing(inner: InnerCronSchedule): Schedule {
 export function payloadToInner(p: Payload, delivery?: Delivery): Record<string, unknown> {
   let message = p.message;
 
-  // When delivery mode is "none", wrap the user's task message in a
-  // standardized execution protocol template.
   if (delivery?.mode === "none" && delivery.channel && delivery.to) {
+    // "none" mode: agent sends messages itself via tools
     message =
-      `[Cron Task Protocol]\n` +
+      `[Cron Task Protocol - mode: none]\n` +
       `\n` +
       `你正在执行一个定时任务，请严格按以下流程操作：\n` +
       `\n` +
@@ -106,6 +105,21 @@ export function payloadToInner(p: Payload, delivery?: Delivery): Record<string, 
       `\n` +
       `## Step 3: 结束\n` +
       `输出 NO_REPLY`;
+  } else if (delivery?.mode === "announce") {
+    // "announce" mode: system auto-sends your final reply to the channel
+    message =
+      `[Cron Task Protocol - mode: announce]\n` +
+      `\n` +
+      `你正在执行一个定时任务。你的最终回复会被系统自动发送到 channel="${delivery.channel ?? ""}", to="${delivery.to ?? ""}"。\n` +
+      `\n` +
+      `## 规则\n` +
+      `- 不要自己调用 message 工具发送消息，系统会自动发送你的回复\n` +
+      `- 你的回复内容就是最终发送给用户的内容，请直接输出最终文本\n` +
+      `- 如果不需要通知用户（如无变更、无异常），回复 NO_REPLY（系统会跳过发送）\n` +
+      `- 不要输出多余的解释或状态说明，只输出要发送的内容或 NO_REPLY\n` +
+      `\n` +
+      `## 任务\n` +
+      `${p.message}`;
   }
 
   return {
