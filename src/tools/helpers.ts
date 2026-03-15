@@ -85,10 +85,10 @@ export function innerScheduleToUserFacing(inner: InnerCronSchedule): Schedule {
 export function payloadToInner(p: Payload, delivery?: Delivery): Record<string, unknown> {
   let message = p.message;
 
-  // When delivery mode is "none", the agent must send messages itself.
+  // When delivery mode is "none", the agent must send messages itself if needed.
   // Inject channel/to context so the agent knows where to send.
   if (delivery?.mode === "none" && delivery.channel && delivery.to) {
-    const hint = `[系统提示] 本任务的 delivery 模式为 none，你需要自己使用 message 工具发送消息。目标: channel="${delivery.channel}", to="${delivery.to}"。发送完成后只输出 NO_REPLY。`;
+    const hint = `[系统提示] 本任务的 delivery 模式为 none。如果任务结果需要通知用户，请使用 message 工具发送，目标: channel="${delivery.channel}", to="${delivery.to}"。如果不需要通知（如无变更、无异常），则不必发送，直接输出 NO_REPLY 即可。`;
     message = hint + "\n\n" + message;
   }
 

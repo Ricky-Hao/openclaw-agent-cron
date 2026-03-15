@@ -39,7 +39,10 @@ export const updateParameters: TSchema = Type.Object({
     timeoutSeconds: Type.Optional(Type.Number()),
   })),
   delivery: Type.Optional(Type.Object({
-    mode: Type.Union([Type.Literal("announce"), Type.Literal("none")], { description: "Delivery mode: 'announce' to send agent reply to channel, 'none' if agent sends messages itself in the session" }),
+    mode: Type.Union([Type.Literal("announce"), Type.Literal("none")], {
+      description: "Delivery mode: 'none' (recommended) lets agent decide when to send messages via message tool; 'announce' auto-sends agent reply to channel",
+      default: "none",
+    }),
     channel: Type.String({ description: "Target channel (required for agentTurn)" }),
     to: Type.String({ description: "Target recipient (required for agentTurn)" }),
   }, { description: "Delivery config (required when payload is agentTurn)" })),
