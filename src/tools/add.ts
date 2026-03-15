@@ -105,7 +105,7 @@ export function createAddExecute(
 
       // ── Build inner cron params ──────────────────────────────────
       const innerSchedule = scheduleToInner(schedule, config.defaultTz);
-      const innerPayload = payloadToInner(payload);
+      const innerPayload = payloadToInner(payload, delivery);
 
       const gatewayParams: Record<string, unknown> = {
         name: p.name,

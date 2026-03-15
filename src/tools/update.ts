@@ -106,7 +106,11 @@ export function createUpdateExecute(
       if (p.payload) {
         const payload = buildPayload(p.payload);
         validateTimeout(payload, config);
-        patch.payload = payloadToInner(payload);
+        // Resolve effective delivery for payload hint injection
+        const effectiveDeliveryForPayload = p.delivery
+          ? buildDelivery(p.delivery)
+          : (currentSpec.delivery as Delivery | undefined);
+        patch.payload = payloadToInner(payload, effectiveDeliveryForPayload);
         currentSpec.payload = payload;
       }
 

@@ -82,10 +82,19 @@ export function innerScheduleToUserFacing(inner: InnerCronSchedule): Schedule {
  * Convert user-facing Payload → inner cron payload params.
  * Only agentTurn is supported.
  */
-export function payloadToInner(p: Payload): Record<string, unknown> {
+export function payloadToInner(p: Payload, delivery?: Delivery): Record<string, unknown> {
+  let message = p.message;
+
+  // When delivery mode is "none", the agent must send messages itself.
+  // Inject channel/to context so the agent knows where to send.
+  if (delivery?.mode === "none" && delivery.channel && delivery.to) {
+    const hint = `[系统提示] 本任务的 delivery 模式为 none，你需要自己使用 message 工具发送消息。目标: channel="${delivery.channel}", to="${delivery.to}"。发送完成后只输出 NO_REPLY。`;
+    message = hint + "\n\n" + message;
+  }
+
   return {
     kind: "agentTurn",
-    message: p.message,
+    message,
     ...(p.timeoutSeconds !== undefined ? { timeoutSeconds: p.timeoutSeconds } : {}),
   };
 }
