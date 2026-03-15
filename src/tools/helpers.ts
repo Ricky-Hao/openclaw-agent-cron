@@ -85,11 +85,27 @@ export function innerScheduleToUserFacing(inner: InnerCronSchedule): Schedule {
 export function payloadToInner(p: Payload, delivery?: Delivery): Record<string, unknown> {
   let message = p.message;
 
-  // When delivery mode is "none", the agent must send messages itself if needed.
-  // Inject channel/to context so the agent knows where to send.
+  // When delivery mode is "none", wrap the user's task message in a
+  // standardized execution protocol template.
   if (delivery?.mode === "none" && delivery.channel && delivery.to) {
-    const hint = `[系统提示] 本任务的 delivery 模式为 none。如果任务结果需要通知用户，请使用 message 工具发送，目标: channel="${delivery.channel}", to="${delivery.to}"。如果不需要通知（如无变更、无异常），则不必发送，直接输出 NO_REPLY 即可。`;
-    message = hint + "\n\n" + message;
+    message =
+      `[Cron Task Protocol]\n` +
+      `\n` +
+      `你正在执行一个定时任务，请严格按以下流程操作：\n` +
+      `\n` +
+      `## Step 1: 执行任务\n` +
+      `${p.message}\n` +
+      `\n` +
+      `## Step 2: 发送结果\n` +
+      `根据任务执行结果，判断是否需要通知用户：\n` +
+      `- 如果需要通知，使用 message 工具发送到 channel="${delivery.channel}", to="${delivery.to}"\n` +
+      `  - 文本内容：直接用 message 参数\n` +
+      `  - 图片/文件：用 media 或 filePath 参数\n` +
+      `  - 如果任务本身已通过工具发送了消息（如 poll_create），则不需要再发\n` +
+      `- 如果不需要通知（无变更、无异常、纯后台操作），跳过此步\n` +
+      `\n` +
+      `## Step 3: 结束\n` +
+      `输出 NO_REPLY`;
   }
 
   return {
