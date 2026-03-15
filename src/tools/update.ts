@@ -121,6 +121,14 @@ export function createUpdateExecute(
         const delivery = buildDelivery(p.delivery);
         patch.delivery = deliveryToInner(delivery);
         currentSpec.delivery = delivery;
+
+        // If delivery changed but payload wasn't updated, re-inject hint into existing payload
+        if (!p.payload && currentSpec.payload) {
+          const existingPayload = currentSpec.payload as Payload;
+          if (existingPayload.kind === "agentTurn") {
+            patch.payload = payloadToInner(existingPayload, delivery);
+          }
+        }
       }
 
       // Validate delivery when payload is agentTurn (existing or newly set)
