@@ -41,7 +41,7 @@ export interface AddJobParams {
     timeoutSeconds?: number;
   };
   delivery: {
-    mode: "announce";
+    mode: "announce" | "none";
     channel: string;
     to: string;
   };
@@ -134,7 +134,7 @@ export async function addJob(params: AddJobParams): Promise<AddJobResult> {
 
     // ── Build inner cron params ──────────────────────────────────
     const innerSchedule = scheduleToInner(schedule, config.defaultTz);
-    const innerPayload = payloadToInner(payload);
+    const innerPayload = payloadToInner(payload, delivery);
 
     const gatewayParams: Record<string, unknown> = {
       name: params.name,
